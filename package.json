@@ -23,6 +23,7 @@
     "@mhoc/axios-digest-auth": "^0.8.0",
     "@nestjs/axios": "^4.0.1",
     "@nestjs/common": "^11.0.1",
+    "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.1",
     "@nestjs/mapped-types": "*",
     "@nestjs/microservices": "^11.1.20",

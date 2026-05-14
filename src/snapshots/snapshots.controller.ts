@@ -5,8 +5,8 @@ import { SnapshotsService } from './snapshots.service';
 export class SnapshotsController {
   constructor(private readonly snapshotsService: SnapshotsService) {}
 
-  @Get('snapshot')
-  getSnapshot() {
-    return this.snapshotsService.getLastSnapshot();
-  }
+  // @Get('snapshot')
+  // getSnapshot() {
+  //   return this.snapshotsService.getLastSnapshot();
+  // }
 }

@@ -4,9 +4,15 @@ import { AppService } from './app.service';
 import { CamerasModule } from './cameras/cameras.module';
 import { MqttModule } from './mqtt/mqtt.module';
 import { SnapshotsModule } from './snapshots/snapshots.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [CamerasModule, MqttModule, SnapshotsModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    CamerasModule,
+    MqttModule,
+    SnapshotsModule
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

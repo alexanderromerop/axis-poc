@@ -7,7 +7,6 @@ export class MqttService {
     constructor(private readonly snapshotsService: SnapshotsService) {}
 
     handleMQTTEvents(data: any, context: MqttContext) {
-
         const topic = context.getTopic();
 
         console.log(`\n--- MQTT Event ---`);
@@ -17,9 +16,7 @@ export class MqttService {
             const parsedData = typeof data === 'string' ? JSON.parse(data) : data;
             console.log('Payload:', parsedData);
 
-            if(parsedData.manufacturer === "Hanwha") {
-                this.snapshotsService.getLastSnapshot();
-            }
+            this.snapshotsService.getLastSnapshot(parsedData.manufacturer);
 
         } catch (error) {
             console.log('Error:', error);

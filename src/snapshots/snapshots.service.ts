@@ -1,3 +1,4 @@
+import { ConfigService } from '@nestjs/config';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import AxiosDigestAuth from '@mhoc/axios-digest-auth';
 import * as fs from 'fs';
@@ -7,10 +8,14 @@ import * as path from 'path';
 export class SnapshotsService implements OnModuleInit {
   private readonly logger = new Logger(SnapshotsService.name);
   private readonly snapshotDir = path.join(process.cwd(), "snapshot");
-  private readonly digestAuth = new AxiosDigestAuth({
-    username: 'admin',
-    password: '@Elecnor1'
-  });
+  private digestAuth: AxiosDigestAuth;
+
+  constructor(private configService: ConfigService) {
+    this.digestAuth = new AxiosDigestAuth({
+      username: this.configService.get<string>('CAMERA_USER') || '',
+      password: this.configService.get<string>('CAMERA_PASSWORD') || ''
+    });
+  }
 
   onModuleInit() {
     this.isSnapshotDir(this.snapshotDir);
@@ -33,11 +38,22 @@ export class SnapshotsService implements OnModuleInit {
     }
   }
 
-  async getLastSnapshot() {
-    const url = "http://192.168.1.100/stw-cgi/video.cgi?msubmenu=snapshot&action=view";
+  async getLastSnapshot(cameraManufacturer: string) {
+    const cameraIp = this.configService.get<string>('CAMERA_IP');
+
+    let url;
+    switch (cameraManufacturer) {
+      case "Hanwha":
+        url = "http://192.168.1.100/stw-cgi/video.cgi?msubmenu=snapshot&action=view";
+        break;
+
+      case "Axis":
+        url = `http://${cameraIp}/axis-cgi/jpg/image.cgi`
+        break;
+    }
 
     try {
-      this.logger.log('Getting snapshot...');
+      this.logger.log(`Getting snapshot from ${cameraIp}...`);
 
       const response = await this.digestAuth.request({
         method: 'GET',
