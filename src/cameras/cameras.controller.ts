@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Logger, HttpCode, Get, Req } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, Get, Req } from '@nestjs/common';
 import { CamerasService } from './cameras.service';
 import { Ctx, MessagePattern, MqttContext, Payload } from '@nestjs/microservices';
 
@@ -24,8 +24,13 @@ export class CamerasController {
   //   return this.camerasService.lineCrossing(request, body);
   // }
 
-  @MessagePattern('camera/VMD')
-  handleMQTTEvents(@Payload() data: any, @Ctx() context: MqttContext) {
-    return this.camerasService.handleAxisEvents(data, context);
-  }
+  // @MessagePattern('camera/VMD')
+  // handleMQTTEvents(@Payload() data: any, @Ctx() context: MqttContext) {
+  //   return this.camerasService.handleAxisEvents(data, context);
+  // }
+  
+  // @MessagePattern('camera/line-crossing')
+  // lineCrossing(@Payload() data: any, @Ctx() context: MqttContext) {
+  //   return this.camerasService.handleAxisEvents(data, context);
+  // }
 }
