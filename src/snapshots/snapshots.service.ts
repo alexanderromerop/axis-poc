@@ -44,7 +44,7 @@ export class SnapshotsService implements OnModuleInit {
     let url;
     switch (cameraManufacturer) {
       case "Hanwha":
-        url = "http://192.168.1.100/stw-cgi/video.cgi?msubmenu=snapshot&action=view";
+        url = `http://${cameraIp}/stw-cgi/video.cgi?msubmenu=snapshot&action=view`;
         break;
 
       case "Axis":
