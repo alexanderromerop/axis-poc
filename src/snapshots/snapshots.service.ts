@@ -1,90 +1,46 @@
 import { ConfigService } from '@nestjs/config';
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import AxiosDigestAuth from '@mhoc/axios-digest-auth';
 import * as https from 'https';
-import * as path from 'path';
-import * as fs from 'fs';
 
 @Injectable()
-export class SnapshotsService implements OnModuleInit {
+export class SnapshotsService {
   private readonly logger = new Logger(SnapshotsService.name);
-  private readonly snapshotDir = path.join(process.cwd(), "snapshot");
+  private digestAuth: AxiosDigestAuth;
 
-  constructor(
-    private readonly httpsService: HttpService,
-    private configService: ConfigService
-  ) {}
-
-  onModuleInit() {
-    this.isSnapshotDir(this.snapshotDir);
+  constructor(private configService: ConfigService) {
+    this.digestAuth = new AxiosDigestAuth({
+      username: this.configService.get<string>('CAMERA_USER') || '',
+      password: this.configService.get<string>('CAMERA_PASSWORD') || ''
+    });
   }
 
-  private isSnapshotDir(path: string): void {
-    try {
-      if (!fs.existsSync(path)) {
-        this.logger.log(`Snapshot directory does not exist. Creating it: ${path}`);
-        fs.mkdirSync(path, { recursive: true });
-      } else {
-        this.logger.log(`Snapshot directory created at: ${path}`);
-      }
-    } catch (error) {
-      let errorMessage = "Error during snapshot directory creation";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-      this.logger.log(errorMessage);
+  private urlBuild(manufacturer: string, ip: string): string {
+    switch (manufacturer) {
+      case 'Hanwha':
+        return `http://${ip}/stw-cgi/video.cgi?msubmenu=snapshot&action=view`;
+      case 'Axis':
+        return `https://${ip}/axis-cgi/jpg/image.cgi`;
+      default:
+        throw new HttpException('Marca de cámara no soportada', HttpStatus.BAD_REQUEST);
     }
   }
 
-  async getLastSnapshot(cameraManufacturer: string) {
-    const cameraIp = this.configService.get<string>('CAMERA_IP');
-    const username = this.configService.get<string>('CAMERA_USER') || '';
-    const password = this.configService.get<string>('CAMERA_PASSWORD') || '';
+  async getSnapshot(cameraManufacturer: string): Promise<Buffer> {
+    const cameraIp = this.configService.get<string>('CAMERA_IP') ?? '';
 
-    let url;
-    switch (cameraManufacturer) {
-      case "Hanwha":
-        url = `https://${cameraIp}/stw-cgi/video.cgi?msubmenu=snapshot&action=view`;
-        break;
+    const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
-      case "Axis":
-        url = `https://${cameraIp}/axis-cgi/jpg/image.cgi`
-        break;
-    }
+    this.logger.log(`Getting snapshot from ${cameraIp}...`);
 
-    const agent = new https.Agent({
-      rejectUnauthorized: false,
+    const response = await this.digestAuth.request({
+      method: 'GET',
+      url: this.urlBuild(cameraManufacturer, cameraIp),
+      responseType: 'arraybuffer',
+      timeout: 5000,
+      httpsAgent: httpsAgent
     });
 
-    try {
-      this.logger.log(`Getting snapshot from ${cameraIp}...`);
-
-      const response = await firstValueFrom(
-        this.httpsService.get(url, {
-          httpsAgent: agent,
-          auth: {
-            username: username,
-            password: password, 
-          },
-          responseType: 'arraybuffer',
-        }),
-      );
-
-      const fileName = `snapshot_${Date.now()}.jpg`;
-      const completeRoute = path.join(this.snapshotDir, fileName);
-
-      fs.writeFileSync(completeRoute, Buffer.from(response.data));
-      this.logger.log(`Snapshot saved: ${fileName}`);
-
-      return { success: true, path: this.snapshotDir };
-
-    } catch (error) {
-      let errorMessage = "Error getting snapshot";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-      this.logger.log(errorMessage);
-    }
+    return Buffer.from(response.data);
   }
 }
