@@ -26,9 +26,9 @@ export class MqttService {
             let imageBuffer;
 
             if (manufacturer === 'Axis') {
-                imageBuffer = await this.snapshotsService.axisGetSnapshot(); 
+                imageBuffer = await this.snapshotsService.fetchSnapshot(manufacturer);
             } else if (manufacturer === 'Hanwha') {
-                imageBuffer = await this.snapshotsService.hanwhaGetSnapshot();
+                imageBuffer = await this.snapshotsService.fetchSnapshot(manufacturer);
             } else {
                 this.logger.warn(`Manufacturer not supported: ${manufacturer}`);
                 return;
