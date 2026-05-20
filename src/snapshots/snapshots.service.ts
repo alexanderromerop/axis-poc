@@ -1,46 +1,56 @@
 import { ConfigService } from '@nestjs/config';
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import AxiosDigestAuth from '@mhoc/axios-digest-auth';
 import * as https from 'https';
+import axios from 'axios';
+import { request } from 'urllib';
 
 @Injectable()
 export class SnapshotsService {
   private readonly logger = new Logger(SnapshotsService.name);
-  private digestAuth: AxiosDigestAuth;
+  // private digestAuth: AxiosDigestAuth;
+  private httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
   constructor(private configService: ConfigService) {
-    this.digestAuth = new AxiosDigestAuth({
-      username: this.configService.get<string>('CAMERA_USER') || '',
-      password: this.configService.get<string>('CAMERA_PASSWORD') || ''
-    });
+    // this.digestAuth = new AxiosDigestAuth({
+    //   username: this.configService.get<string>('CAMERA_USER') || '',
+    //   password: this.configService.get<string>('CAMERA_PASSWORD') || ''
+    // });
   }
 
-  private urlBuild(manufacturer: string, ip: string): string {
-    switch (manufacturer) {
-      case 'Hanwha':
-        return `http://${ip}/stw-cgi/video.cgi?msubmenu=snapshot&action=view`;
-      case 'Axis':
-        return `https://${ip}/axis-cgi/jpg/image.cgi`;
-      default:
-        throw new HttpException('Marca de cámara no soportada', HttpStatus.BAD_REQUEST);
-    }
-  }
-
-  async getSnapshot(cameraManufacturer: string): Promise<Buffer> {
+  async hanwhaGetSnapshot(): Promise<Buffer> {
     const cameraIp = this.configService.get<string>('CAMERA_IP') ?? '';
-
-    const httpsAgent = new https.Agent({ rejectUnauthorized: false });
+    const url = `http://${cameraIp}/stw-cgi/video.cgi?msubmenu=snapshot&action=view`;
+    const user = this.configService.get<string>('CAMERA_USER') ?? '';
+    const password = this.configService.get<string>('CAMERA_PASSWORD') ?? '';
 
     this.logger.log(`Getting snapshot from ${cameraIp}...`);
 
-    const response = await this.digestAuth.request({
-      method: 'GET',
-      url: this.urlBuild(cameraManufacturer, cameraIp),
-      responseType: 'arraybuffer',
-      timeout: 5000,
-      httpsAgent: httpsAgent
+    const response = await axios.get(url, {
+      auth: { username: user, password: password },
+      httpsAgent: this.httpsAgent,
+      responseType: 'arraybuffer'
     });
 
     return Buffer.from(response.data);
+  }
+
+  async axisGetSnapshot(): Promise<Buffer> {
+    const cameraIp = this.configService.get<string>('CAMERA_IP') ?? '';
+    const url = `http://${cameraIp}/axis-cgi/jpg/image.cgi`;
+    const user = this.configService.get<string>('CAMERA_USER') || '';
+    const password = this.configService.get<string>('CAMERA_PASSWORD') || '';
+
+    const response = await request(url, {
+      digestAuth: `${user}:${password}`,
+      timeout: 5000,
+      rejectUnauthorized: false
+    });
+
+    if (response.status !== 200) {
+      throw new Error(`Axis camera returned status ${response.status}`);
+    }
+
+    return response.data;
   }
 }

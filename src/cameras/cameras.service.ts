@@ -8,18 +8,6 @@ export class CamerasService {
     console.log('Received GET request to /cameras/events');
   }
 
-  // humanDetection(request: Request, body: any) {
-  //   console.log('\n--- MOVEMENT DETECTION ---');
-  //   console.log('Body:', body);
-  //   console.log('-----------------------------------------\n');
-  // }
-
-  // lineCrossing(request: Request, body: any) {
-  //   console.log('\n--- LINE CROSSING ---');
-  //   console.log('Body:', body);
-  //   console.log('-----------------------------------------\n');
-  // }
-
    handleAxisEvents(data: any, context: MqttContext) {
      const topic = context.getTopic();
 

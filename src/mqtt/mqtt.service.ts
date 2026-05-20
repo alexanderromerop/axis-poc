@@ -21,12 +21,24 @@ export class MqttService {
             const parsedData = typeof data === 'string' ? JSON.parse(data) : data;
             this.logger.log('Payload:', JSON.stringify(parsedData));
 
-            const imageBuffer = await this.snapshotsService.getSnapshot(parsedData.manufacturer);
+            const manufacturer = parsedData.manufacturer
 
-            const eventType = parsedData.event_type ?? '';
-            const savedPath = this.storageService.saveImage(imageBuffer, `${eventType}`);
+            let imageBuffer;
 
-            this.logger.log(`Snapshot saved at: ${savedPath}`);
+            if (manufacturer === 'Axis') {
+                imageBuffer = await this.snapshotsService.axisGetSnapshot(); 
+            } else if (manufacturer === 'Hanwha') {
+                imageBuffer = await this.snapshotsService.hanwhaGetSnapshot();
+            } else {
+                this.logger.warn(`Manufacturer not supported: ${manufacturer}`);
+                return;
+            }
+
+            if (imageBuffer) {
+                const eventType = parsedData.event_type ?? 'unknown_event';
+                const savedPath = await this.storageService.saveImage(imageBuffer, `${eventType}`);
+                this.logger.log(`Snapshot saved at: ${savedPath}`);
+            }
         } catch (error) {
             console.log('Error:', error);
         }
