@@ -1,8 +1,8 @@
 import { forwardRef, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { request } from 'urllib';
-import { IMqttEventPayload } from '../mqtt/interface/event.interface';
-import { CamerasService } from '../cameras/cameras.service';
-import { StorageService } from '../storage/storage.service';
+import { IMqttEventPayload } from 'src/mqtt/interface/event.interface';
+import { CamerasService } from 'src/cameras/cameras.service';
+import { StorageService } from 'src/storage/storage.service';
 
 @Injectable()
 export class SnapshotsService {
