@@ -5,13 +5,15 @@ import { MqttModule } from './mqtt/mqtt.module';
 import { SnapshotsModule } from './snapshots/snapshots.module';
 import { ConfigModule } from '@nestjs/config';
 import { PingModule } from './ping/ping.module';
+import { CamerasModule } from './cameras/cameras.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     MqttModule,
     SnapshotsModule,
-    PingModule
+    PingModule,
+    CamerasModule
   ],
   controllers: [AppController],
   providers: [AppService],
