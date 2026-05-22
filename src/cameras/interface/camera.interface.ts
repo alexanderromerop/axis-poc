@@ -8,4 +8,5 @@ export interface ICamera {
     user: string,
     password: string,
     id: string,
+    event_rules?: string[],
 }

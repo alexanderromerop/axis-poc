@@ -14,7 +14,7 @@ export class PingService implements OnModuleInit {
     }
 
     async sendPing() {
-        const cameras: ICamera[] = this.camerasService.findAll();
+        const cameras: ICamera[] = await this.camerasService.findAll();
 
         for (const camera of cameras) {
             const url = `http://${camera.ip}`;

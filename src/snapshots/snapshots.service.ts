@@ -6,7 +6,7 @@ import { StorageService } from 'src/storage/storage.service';
 
 @Injectable()
 export class SnapshotsService {
-  private readonly logger = new Logger(SnapshotsService.name);
+  private readonly logger = new Logger(SnapshotsService.name);  
 
   constructor(
     @Inject(forwardRef(() => CamerasService))

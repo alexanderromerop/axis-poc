@@ -13,4 +13,14 @@ export class CamerasController {
   findOne(@Param('id') id: string) {
     return this.camerasService.findOne(id);
   }
+  
+  @Get('serial-number/:id')
+  serialNumber(@Param('id') id: string) {
+    return this.camerasService.fetchSerialNumber(id);
+  }
+
+  @Get('event-rules/:id')
+  eventRules(@Param('id') id: string) {
+    return this.camerasService.fetchEventRules(id);
+  }
 }
