@@ -4,6 +4,7 @@ import { MqttController } from './mqtt.controller';
 import { StorageService } from 'src/storage/storage.service';
 import { SnapshotsService } from 'src/snapshots/snapshots.service';
 import { ConfigModule } from '@nestjs/config';
+import { CamerasService } from 'src/cameras/cameras.service';
 
 @Module({
   imports: [ConfigModule],
@@ -11,7 +12,8 @@ import { ConfigModule } from '@nestjs/config';
   providers: [
     MqttService,
     SnapshotsService,
-    StorageService
+    StorageService,
+    CamerasService
   ],
 })
 export class MqttModule {}

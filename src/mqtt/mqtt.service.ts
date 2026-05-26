@@ -1,44 +1,24 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { MqttContext } from '@nestjs/microservices';
 import { SnapshotsService } from '../snapshots/snapshots.service';
-import { StorageService } from 'src/storage/storage.service';
+import { IMqttEventPayload } from './interface/event.interface';
 
 @Injectable()
 export class MqttService {
     private readonly logger = new Logger(MqttService.name);
-    
-    constructor(
-        private readonly snapshotsService: SnapshotsService,
-        private readonly storageService: StorageService,
-    ) {}
 
-    async handleMQTTEvents(data: any, context: MqttContext) {
+    constructor(private readonly snapshotsService: SnapshotsService) { }
+
+    async handleMQTTEvents(data: IMqttEventPayload, context: MqttContext) {
         const topic = context.getTopic();
 
         this.logger.log(`\n--- MQTT Event ---\nTopic: ${topic}`);
 
         try {
-            const parsedData = typeof data === 'string' ? JSON.parse(data) : data;
+            const parsedData: Partial<IMqttEventPayload> = typeof data === 'string' ? JSON.parse(data) : data;
             this.logger.log('Payload:', JSON.stringify(parsedData));
 
-            const manufacturer = parsedData.manufacturer
-
-            let imageBuffer;
-
-            if (manufacturer === 'Axis') {
-                imageBuffer = await this.snapshotsService.fetchSnapshot(manufacturer);
-            } else if (manufacturer === 'Hanwha') {
-                imageBuffer = await this.snapshotsService.fetchSnapshot(manufacturer);
-            } else {
-                this.logger.warn(`Manufacturer not supported: ${manufacturer}`);
-                return;
-            }
-
-            if (imageBuffer) {
-                const eventType = parsedData.event_type ?? 'unknown_event';
-                const savedPath = await this.storageService.saveImage(imageBuffer, `${eventType}`);
-                this.logger.log(`Snapshot saved at: ${savedPath}`);
-            }
+            await this.snapshotsService.processSnapshot(parsedData);
         } catch (error) {
             console.log('Error:', error);
         }
